@@ -1,5 +1,6 @@
 #route optimization given a graph matrix
 
+from turtle import shape
 import numpy as np
 np.set_printoptions(suppress=True, precision=0)
 
@@ -62,8 +63,6 @@ def sko_matmul(stepn:np.ndarray, step1:np.ndarray, primes:list, rout:np.ndarray)
 
     for fr in range(c_ax):
         for to in range(c_ax):
-            print(fr+1, to+1, 90*"-")
-
             for bt in range(c_ax):
                 if bt == to or bt == fr:
                     continue
@@ -77,23 +76,37 @@ def sko_matmul(stepn:np.ndarray, step1:np.ndarray, primes:list, rout:np.ndarray)
 
                     dout[fr, to] = comp[k]
 
-                    print(k, bt+1, "\t", rout[fr, bt], rout[bt, to])
-
                     if k == 2:
-                        rout[fr, to] = rout[fr, bt] * rout[bt, to]
+                        rout[fr, to] = rout[fr, bt].copy()
+                        for i, v in enumerate(rout[bt, to]):
+                            if i == 0:
+                                continue
+                            else:
+                                print(rout[fr, to], v)
+                                rout[fr, to].append(v)
+                                print(rout[fr, to])
+
+                        # rout[fr, to] = rout[fr, bt] * rout[bt, to]
+                        # print(fr+1, to+1, 90*"-")
+                        # print(bt+1, "\t", rout[fr, bt], rout[bt, to])
 
     return dout, rout
 
 def iterate_mat(step:np.ndarray, prs):
-    rout = np.ones(step.shape) * prs
+    # rout = np.ones(step.shape) * prs
+    rout = np.empty((step.shape), dtype=object)
     dout = step.copy()
 
     for i in range(rout.shape[0]):
-        rout[i,i] = 0
+        # rout[i,i] = 0
         
         for j in range(rout.shape[1]):
-            if step[i,j] == 0 or step[i,j] == np.inf:
-                rout[i,j] = 1
+            rout[i,j] = [i+1, j+1]
+            if step[i,j] == np.inf:
+                rout[i,j] = []
+
+            # if step[i,j] == 0 or step[i,j] == np.inf:
+            #     rout[i,j] = 1
 
     while True:
         dout, rout = sko_matmul(dout, step, prs, rout)
@@ -103,14 +116,27 @@ def iterate_mat(step:np.ndarray, prs):
         if np.array_equal(dout, sko_matmul(dout, step, prs, rout)[0]):
             return dout, rout
 
+def opt_rut(rout, prs, fr, to):
+    pass
+
 def get_simplified_rut(dout:np.ndarray, rout:np.ndarray, rut_row):
     ma = (rut_row==1)
 
     tempd, tempr = dout[ma, :], rout[ma, :]
     return tempd[:, ma], tempr[:, ma]
 
-def get_ruts(osd:np.ndarray, rut:np.ndarray, lng:np.ndarray):
+def get_ruts(step:np.ndarray, rut:np.ndarray, lng:np.ndarray = [], tow_names = []):
+    if len(tow_names) != rut.shape[0]:
+        tow_names = [x for x in range(rut.shape[0])]
+    if len(lng) != step.shape[0]:
+        lng = [1 for x in range(step.shape[0])]
+
     prs = list_primes(len(lng))
 
+    osd = step*lng
 
-    pass
+    dout, rout = iterate_mat(osd, prs)
+
+    for tow in range(rut.shape[0]):
+        rut_dout, rut_rout = get_simplified_rut(dout, rout, rut[tow, :])
+        print(tow_names[tow], rut_mat)
